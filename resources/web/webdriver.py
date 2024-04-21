@@ -20,6 +20,7 @@ class Browser(Enum):
     FIREFOX = "firefox"
     EDGE = "edge"
 
+
 class WebDriver(DriverOptions):
     """
     Classe responsável por inicializar e encerrar os drivers da Web do Selenium para Chrome, Firefox e Edge.
@@ -33,16 +34,19 @@ class WebDriver(DriverOptions):
 
     @classmethod
     def get_navegador(cls, browser, headless=False, download_folder_path=None, **kwargs):
-        instance = cls(browser, headless=headless, download_folder_path=download_folder_path, **kwargs)
-        browser_methods = {
-            Browser.CHROME: instance.get_chrome_driver,
-            Browser.UNDETECTED_CHROME: instance.get_undetected_chrome,
-            Browser.FIREFOX: instance.get_firefox_driver,
-            Browser.EDGE: instance.get_edge_driver,
-        }
-        if instance.browser not in browser_methods:
-            raise ValueError(f"Browser {instance.browser} não suportado.")
-        return browser_methods[instance.browser]()
+        try:
+            instance = cls(browser, headless=headless, download_folder_path=download_folder_path, **kwargs)
+            browser_methods = {
+                Browser.CHROME: instance.get_chrome_driver,
+                Browser.UNDETECTED_CHROME: instance.get_undetected_chrome,
+                Browser.FIREFOX: instance.get_firefox_driver,
+                Browser.EDGE: instance.get_edge_driver,
+            }
+            if instance.browser not in browser_methods:
+                raise RuntimeError(f"Não foi possível iniciar o navegador {browser}.")
+            return browser_methods[instance.browser]()
+        except:
+            raise RuntimeError(f"Não foi possível iniciar o navegador {browser}.")
 
     def configure_browser_options(self, browser_options):
         """
@@ -51,7 +55,7 @@ class WebDriver(DriverOptions):
         browser_options.headless = self._headless
         for key, value in self._kwargs.items():
             setattr(browser_options, key, value)
-            
+
     def get_chrome_driver(self):
         """
         Inicializa e retorna um driver Chrome com as opções configuradas.
@@ -69,12 +73,11 @@ class WebDriver(DriverOptions):
         """
         chrome_options = self.undetectable_chrome()
         self.configure_browser_options(chrome_options)
-        # chrome_driver_path = r'C:\Users\RPA\.wdm\drivers\chromedriver\win64\116.0.5845.111\chromedriver-win32\chromedriver.exe'
-        # driver = uc.Chrome(driver_executable_path=chrome_driver_path, options=chrome_options)
+        chrome_options.add_argument("--kiosk-printing")
         driver = uc.Chrome(executable_path=ChromeDriverManager().install(), options=chrome_options)
         driver.maximize_window()
         return driver
-    
+
     def get_firefox_driver(self):
         """
         Inicializa e retorna um driver do Firefox com as opções configuradas.
@@ -85,7 +88,7 @@ class WebDriver(DriverOptions):
         driver = webdriver.Firefox(service=firefox_service, options=firefox_options)
         driver.maximize_window()
         return driver
-    
+
     def get_edge_driver(self):
         """
         Inicializa e retorna um driver Edge com as opções configuradas.
