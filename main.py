@@ -1,14 +1,10 @@
 import asyncio
 import logging
-from math import log
 
-from login_gov import Gov
 from resources.modules.common import attempts, time_execution
 from resources.modules.email import Email
-from resources.modules.log import Log
 from resources.web.webdriver import Browser, WebDriver
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 class Bot:
 
