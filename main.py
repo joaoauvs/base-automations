@@ -7,10 +7,10 @@ para execução da automação.
 import logging
 from typing import Optional
 
-from resources.modules.common import attempts, time_execution
-from resources.modules.email import Email
-from resources.modules.log import LogManager
-from resources.web.webdriver import Browser, WebDriver
+from src.modules.common import attempts, time_execution
+from src.modules.email import Email
+from src.modules.log import LogManager
+from src.web.webdriver import Browser, WebDriver
 
 
 class Bot:
