@@ -10,7 +10,7 @@ from typing import Optional
 from src.modules.common import attempts, time_execution
 from src.modules.email import Email
 from src.modules.log import LogManager
-from src.web.webdriver import Browser, WebDriver
+from src.modules.web.webdriver import Browser, WebDriver
 
 
 class Bot:

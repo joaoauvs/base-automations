@@ -5,6 +5,7 @@ import ssl
 import time
 import urllib.request
 from datetime import datetime
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -18,26 +19,26 @@ class File:
     """Classe responsável por operações relacionadas a arquivos."""
 
     @staticmethod
-    def _create_directory_if_not_exists(directory):
+    def _create_directory_if_not_exists(directory: str) -> None:
         """
         Cria um diretório se ele não existir.
-        
+
         Args:
             directory (str): Caminho do diretório a ser criado.
         """
         os.makedirs(directory, exist_ok=True)
 
     @staticmethod
-    def download_url(url, directory):
+    def download_url(url: str, directory: str) -> None:
         """
         Baixa um arquivo da URL fornecida e o salva no diretório especificado.
 
         Args:
             url (str): URL do arquivo a ser baixado.
             directory (str): Caminho do diretório onde o arquivo será salvo.
-            
+
         Raises:
-            Exception: Se ocorrer um erro ao baixar o arquivo.
+            FileNotFoundError: Se ocorrer um erro ao baixar o arquivo.
         """
         try:
             logging.debug(f"Downloading file from {url} to {directory}")
@@ -60,16 +61,16 @@ class File:
             raise FileNotFoundError(f"Erro ao baixar o arquivo {url}: {error}")
 
     @staticmethod
-    def wait_for_download(path_origem, timeout=15, check_interval=3):
+    def wait_for_download(path_origem: str, timeout: int = 15, check_interval: int = 3) -> None:
         """
         Aguarda até que um arquivo no diretório especificado termine de ser baixado.
-        
-        A função verifica se o tamanho do arquivo permanece inalterado durante o intervalo de verificação 
+
+        A função verifica se o tamanho do arquivo permanece inalterado durante o intervalo de verificação
         para determinar se o download foi concluído.
-        
+
         Args:
             path_origem (str): Caminho do diretório onde o arquivo está sendo baixado.
-            timeout (int, optional): Tempo máximo em segundos para aguardar pelo término do download. Padrão é 10 segundos.
+            timeout (int, optional): Tempo máximo em segundos para aguardar pelo término do download. Padrão é 15 segundos.
             check_interval (int, optional): Intervalo em segundos para verificar o tamanho do arquivo. Padrão é 3 segundos.
 
         Returns:
@@ -93,18 +94,17 @@ class File:
             logging.warning("Tempo limite excedido ao esperar pelo download")
 
     @staticmethod
-    def wait_for_files(path, ext, timeout=10):
+    def wait_for_files(path: str, ext: str, timeout: int = 10) -> Union[List[str], bool]:
         """
         Aguarda por arquivos com uma extensão específica em um diretório por um tempo limite.
-        
+
         Args:
             path (str): Caminho do diretório onde os arquivos serão procurados.
             ext (str): Extensão dos arquivos que devem ser esperados.
             timeout (int, optional): Tempo limite para aguardar os arquivos em segundos. Padrão: 10 segundos.
-        
+
         Returns:
-            list: Lista de arquivos encontrados com a extensão desejada.
-            False: Retorna 'False' se o tempo limite for atingido e nenhum arquivo for encontrado.
+            Union[List[str], bool]: Lista de arquivos encontrados com a extensão desejada ou False se não encontrado.
         """
         start_time = time.time()
         
@@ -124,37 +124,44 @@ class File:
         return False
 
     @staticmethod
-    def move_files_by_extension(source_path, destination_path, extension):
+    def move_files_by_extension(source_path: str, destination_path: str, extension: str) -> None:
         """
         Move arquivos com uma determinada extensão de um diretório de origem para um destino.
-        
+
         Args:
             source_path (str): Caminho do diretório de origem.
             destination_path (str): Caminho do diretório de destino.
             extension (str): Extensão dos arquivos a serem movidos (ex: ".pdf").
+
+        Raises:
+            Exception: Se ocorrer um erro ao mover os arquivos.
         """
         try:
             logging.info("Movendo arquivos!")
             File._create_directory_if_not_exists(destination_path)
-            
+
             for file in os.listdir(source_path):
                 if file.upper().endswith(extension.upper()):
                     shutil.move(os.path.join(source_path, file), destination_path)
         except Exception as e:
-            raise logging.warning(f"Erro: {e}")
+            logging.warning(f"Erro ao mover arquivos: {e}")
+            raise Exception(f"Erro ao mover arquivos: {e}") from e
 
     @staticmethod
-    async def clear_folder(source_path):
+    async def clear_folder(source_path: str) -> None:
         """
         Deleta todos os arquivos e diretórios dentro do diretório especificado.
-        
+
         Args:
             source_path (str): Caminho do diretório a ser limpo.
+
+        Raises:
+            Exception: Se ocorrer um erro ao deletar os arquivos.
         """
         try:
             logging.info("Deletando arquivos!")
             File._create_directory_if_not_exists(source_path)
-            
+
             with os.scandir(source_path) as entries:
                 for entry in entries:
                     if entry.is_file():
@@ -162,13 +169,14 @@ class File:
                     elif entry.is_dir():
                         os.rmdir(entry.path)
         except Exception as e:
-            raise logging.warning(f"Erro ao deletar arquivos: {e}")
+            logging.warning(f"Erro ao deletar arquivos: {e}")
+            raise Exception(f"Erro ao deletar arquivos: {e}") from e
 
     @staticmethod
-    def delete_files_extension(directory, extension):
+    def delete_files_extension(directory: str, extension: str) -> None:
         """
         Deleta todos os arquivos com uma determinada extensão em um diretório especificado.
-        
+
         Args:
             directory (str): Caminho do diretório onde os arquivos serão deletados.
             extension (str): Extensão dos arquivos a serem deletados (ex: ".pdf").
@@ -179,13 +187,13 @@ class File:
                 os.remove(file_path)
 
     @staticmethod
-    def delete_file(filename):
+    def delete_file(filename: str) -> None:
         """
         Deleta um arquivo especificado.
 
         Args:
             filename (str): Caminho do arquivo a ser deletado.
-        
+
         Raises:
             OSError: Se ocorrer um erro ao deletar o arquivo.
         """
@@ -195,10 +203,10 @@ class File:
             raise OSError(f"Erro ao deletar o arquivo {filename}: {error}")
         
     @staticmethod
-    def delete_files_directory(directory):
+    def delete_files_directory(directory: str) -> None:
         """
         Deleta todos os arquivos em um diretório especificado, mas mantém o diretório.
-        
+
         Args:
             directory (str): Caminho do diretório onde os arquivos serão deletados.
         """
@@ -209,7 +217,7 @@ class File:
             os.remove(file_path)
 
     @staticmethod
-    def delete_files_and_directory(directory):
+    def delete_files_and_directory(directory: str) -> None:
         """
         Deleta todos os arquivos em um diretório especificado e em seguida deleta o próprio diretório.
 
@@ -223,14 +231,14 @@ class File:
             os.rmdir(directory)
 
     @staticmethod
-    def check_files_exist(destination_path, prefix):
+    def check_files_exist(destination_path: str, prefix: str) -> bool:
         """
         Verifica se existem arquivos com um determinado prefixo no diretório especificado.
-        
+
         Args:
             destination_path (str): Caminho do diretório onde a verificação será realizada.
             prefix (str): Prefixo dos arquivos a serem verificados.
-            
+
         Returns:
             bool: True se existir pelo menos um arquivo com o prefixo especificado, False caso contrário.
         """
@@ -238,15 +246,15 @@ class File:
         return any(file.lower().startswith(prefix.lower()) for file in files)
     
     @staticmethod
-    def get_files_directory(directory):
+    def get_files_directory(directory: str) -> List[str]:
         """
         Retorna todos os arquivos de um diretório especificado.
-        
+
         Args:
-            diretorio (str): Caminho do diretório do qual os arquivos serão listados.
-            
+            directory (str): Caminho do diretório do qual os arquivos serão listados.
+
         Returns:
-            list: Lista contendo o nome de todos os arquivos no diretório especificado.
+            List[str]: Lista contendo o nome de todos os arquivos no diretório especificado.
         """
         logging.debug(f"Listing files in directory {directory}")
         return [arquivo for arquivo in os.listdir(directory) if os.path.isfile(os.path.join(directory, arquivo))]

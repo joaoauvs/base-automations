@@ -45,8 +45,9 @@ class WebDriver(DriverOptions):
             if instance.browser not in browser_methods:
                 raise RuntimeError(f"Não foi possível iniciar o navegador {browser}.")
             return browser_methods[instance.browser]()
-        except:
-            raise RuntimeError(f"Não foi possível iniciar o navegador {browser}.")
+        except Exception as e:
+            logging.error(f"Erro ao iniciar navegador {browser}: {e}")
+            raise RuntimeError(f"Não foi possível iniciar o navegador {browser}.") from e
 
     def configure_browser_options(self, browser_options):
         """
