@@ -5,10 +5,8 @@ de forma estruturada e padronizada.
 """
 
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 
 class LogManager:
@@ -34,7 +32,7 @@ class LogManager:
 
     def __init__(
         self,
-        path: str,
+        path: str = "logs",
         level: int = DEFAULT_LEVEL,
         file_mode: str = 'a',
         encoding: str = 'utf-8'
@@ -42,7 +40,7 @@ class LogManager:
         """Inicializa o gerenciador de logs.
 
         Args:
-            path: Caminho do diretório onde os logs serão armazenados.
+            path: Caminho do diretório onde os logs serão armazenados (padrão: "logs").
             level: Nível mínimo de log (padrão: INFO).
             file_mode: Modo de abertura do arquivo ('a' = append, 'w' = overwrite).
             encoding: Codificação do arquivo de log (padrão: utf-8).

@@ -78,7 +78,7 @@ def main() -> None:
     """Ponto de entrada principal da aplicação."""
     try:
         # Configurar logging antes de executar
-        log_manager = LogManager(path="./logs/")
+        LogManager()
 
         # Criar e executar o bot
         # Você pode passar um CNPJ específico aqui

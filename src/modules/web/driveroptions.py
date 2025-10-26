@@ -6,6 +6,8 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
+from src.utils.platform_utils import PlatformUtils
+
 
 class DriverOptions:
     DEFAULT_LANGUAGE_CODE = "pt-BR"
@@ -55,15 +57,11 @@ class DriverOptions:
     def _set_common_chrome_arguments(self, options):
         self._default()
 
-        arguments = [
-            "--disable-infobars",
-            "--disable-popup-blocking",
-            "--no-sandbox",
-            "--disable-cache",
-            "--ignore-certificate-errors",
-            "--ignore-ssl-errors",
-            "--disable-extensions",
-            "--disable-notifications",
+        # Argumentos base compatíveis com múltiplas plataformas
+        arguments = PlatformUtils.get_chrome_args()
+        
+        # Argumentos adicionais específicos do projeto
+        additional_args = [
             "--force-dark-mode",
             "--lang=pt-BR",
             "--disable-cookies",
@@ -79,11 +77,11 @@ class DriverOptions:
             "--disable-syncdisable-translate",
             "--metrics-recording-only",
             "--safebrowsing-disable-auto-update",
-            "--disable-dev-shm-usage",
-            "--disable-blink-features=AutomationControlled",
             "--enable-geolocation",
             "--enable-javascript",
         ]
+        
+        arguments.extend(additional_args)
 
         for arg in arguments:
             options.add_argument(arg)

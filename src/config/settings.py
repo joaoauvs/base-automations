@@ -1,5 +1,6 @@
 import locale
 import os
+import platform
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -8,7 +9,24 @@ from dotenv import find_dotenv, load_dotenv
 
 from src.core.log import Logger
 
-locale.setlocale(locale.LC_TIME, "Portuguese_Brazil.1252")
+# Configuração de locale compatível com Windows e Linux
+try:
+    if platform.system() == "Windows":
+        locale.setlocale(locale.LC_TIME, "Portuguese_Brazil.1252")
+    else:
+        # Linux/Unix
+        try:
+            locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
+        except locale.Error:
+            # Fallback para sistemas que não têm pt_BR
+            try:
+                locale.setlocale(locale.LC_TIME, "C.UTF-8")
+            except locale.Error:
+                # Último fallback
+                locale.setlocale(locale.LC_TIME, "C")
+except locale.Error:
+    # Se não conseguir configurar nenhum locale, usa o padrão do sistema
+    pass
 
 dotenv_path = find_dotenv()
 if dotenv_path:
