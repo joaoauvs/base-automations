@@ -48,10 +48,7 @@ class BotWeb:
             logging.info(f"URL ALVO: {self.url}")
 
             # Inicializa o navegador
-            self.navegador = WebDriver.get_navegador(
-                Browser.UNDETECTED_CHROME,
-                headless=False
-            )
+            self.navegador = WebDriver.get_navegador(Browser.UNDETECTED_CHROME, headless=False)
 
             # Navega para a URL
             self.navegador.get(self.url)
@@ -92,7 +89,7 @@ class BotWeb:
             url: URL específica (opcional, usa a URL da instância se não fornecida).
         """
         url_processamento = url or self.url
-        
+
         for cnpj in lista_cnpjs:
             try:
                 logging.info(f"Processando CNPJ: {cnpj}")
@@ -112,11 +109,7 @@ def main() -> None:
 
         # Criar e executar o bot web
         # Exemplo de uso com URL específica
-        bot_web = BotWeb(
-            cnpj="12.345.678/0001-90", 
-            robot_name="AutomacaoWeb",
-            url="https://www.receita.fazenda.gov.br/"
-        )
+        bot_web = BotWeb(cnpj="12.345.678/0001-90", robot_name="AutomacaoWeb", url="https://www.receita.fazenda.gov.br/")
         bot_web.executar_automacao_web()
 
         # Exemplo de processamento em lote

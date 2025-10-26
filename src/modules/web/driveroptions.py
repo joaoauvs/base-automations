@@ -59,7 +59,7 @@ class DriverOptions:
 
         # Argumentos base compatíveis com múltiplas plataformas
         arguments = PlatformUtils.get_chrome_args()
-        
+
         # Argumentos adicionais específicos do projeto
         additional_args = [
             "--force-dark-mode",
@@ -80,7 +80,7 @@ class DriverOptions:
             "--enable-geolocation",
             "--enable-javascript",
         ]
-        
+
         arguments.extend(additional_args)
 
         for arg in arguments:

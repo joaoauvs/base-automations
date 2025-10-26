@@ -30,13 +30,7 @@ class LogManager:
     DEFAULT_DATE_FORMAT = "%d/%m/%Y %H:%M:%S"
     DEFAULT_LEVEL = logging.INFO
 
-    def __init__(
-        self,
-        path: str = "logs",
-        level: int = DEFAULT_LEVEL,
-        file_mode: str = 'a',
-        encoding: str = 'utf-8'
-    ) -> None:
+    def __init__(self, path: str = "logs", level: int = DEFAULT_LEVEL, file_mode: str = "a", encoding: str = "utf-8") -> None:
         """Inicializa o gerenciador de logs.
 
         Args:
@@ -76,15 +70,7 @@ class LogManager:
                 logging.root.removeHandler(handler)
 
             # Configura o logging
-            logging.basicConfig(
-                filename=str(self.log_path),
-                filemode=self._file_mode,
-                encoding=self._encoding,
-                level=self._level,
-                format=self.DEFAULT_FORMAT,
-                datefmt=self.DEFAULT_DATE_FORMAT,
-                style='{'
-            )
+            logging.basicConfig(filename=str(self.log_path), filemode=self._file_mode, encoding=self._encoding, level=self._level, format=self.DEFAULT_FORMAT, datefmt=self.DEFAULT_DATE_FORMAT, style="{")
 
             logging.info(f"Sistema de log iniciado - Arquivo: {self.log_path}")
 

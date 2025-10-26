@@ -1,5 +1,4 @@
 import logging
-import os
 from enum import Enum
 
 import undetected_chromedriver as uc
@@ -10,8 +9,9 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
-from .driveroptions import DriverOptions
 from src.utils.platform_utils import PlatformUtils
+
+from .driveroptions import DriverOptions
 
 
 class Browser(Enum):
@@ -64,10 +64,7 @@ class WebDriver(DriverOptions):
         chrome_options = self.chrome()
         self.configure_browser_options(chrome_options)
         # Usar devnull compatível entre sistemas
-        chrome_service = ChromeService(
-            executable_path=ChromeDriverManager().install(), 
-            log_path=PlatformUtils.get_null_device()
-        )
+        chrome_service = ChromeService(executable_path=ChromeDriverManager().install(), log_path=PlatformUtils.get_null_device())
         driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
         driver.maximize_window()
         return driver

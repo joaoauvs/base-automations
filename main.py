@@ -44,10 +44,7 @@ class Bot:
             logging.info(f"INICIANDO O PROCESSO CNPJ: {self.cnpj}")
 
             # Inicializa o navegador
-            self.navegador = WebDriver.get_navegador(
-                Browser.UNDETECTED_CHROME,
-                headless=False
-            )
+            self.navegador = WebDriver.get_navegador(Browser.UNDETECTED_CHROME, headless=False)
 
             # Adicione aqui a lógica do seu bot
             # Exemplo:
