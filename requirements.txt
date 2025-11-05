@@ -45,6 +45,10 @@ smtplib  # Built-in Python module
 # -----------------------------------------------------------------------------
 python-dotenv>=1.0.0
 
+# Azure Key Vault para gerenciamento seguro de credenciais
+azure-keyvault-secrets>=4.7.0
+azure-identity>=1.15.0
+
 # -----------------------------------------------------------------------------
 # LOGGING E MONITORAMENTO
 # -----------------------------------------------------------------------------

@@ -11,6 +11,8 @@ from typing import Dict, Optional
 from twocaptcha import TwoCaptcha
 from twocaptcha.api import ApiException, NetworkException, TimeoutException
 
+from src.config.settings import get_config_value
+
 
 class CaptchaSolver:
     """Resolvedor de captchas usando o serviço 2Captcha.
@@ -32,12 +34,12 @@ class CaptchaSolver:
         """Inicializa o resolvedor de captchas.
 
         Args:
-            api_key: Chave de API do 2Captcha. Se None, busca de variável de ambiente.
+            api_key: Chave de API do 2Captcha. Se None, busca do Key Vault ou variável de ambiente.
 
         Raises:
             ValueError: Se a API key não for fornecida nem encontrada em variáveis de ambiente.
         """
-        self.api_key = api_key or os.getenv("TWOCAPTCHA_API_KEY", "")
+        self.api_key = api_key or get_config_value("TWOCAPTCHA_API_KEY", "TWOCAPTCHA-API-KEY")
 
         if not self.api_key:
             raise ValueError(
@@ -254,13 +256,13 @@ class Captcha(CaptchaSolver):
         Args:
             api_key: Chave de API do 2Captcha.
         """
-        # Se não fornecido, tenta pegar de env, se não existir usa string vazia
+        # Se não fornecido, tenta pegar do Key Vault ou env, se não existir usa string vazia
         if api_key is None:
-            api_key = os.getenv("TWOCAPTCHA_API_KEY")
+            api_key = get_config_value("TWOCAPTCHA_API_KEY", "TWOCAPTCHA-API-KEY")
             if not api_key:
                 logging.warning(
                     "API key do 2Captcha não configurada. "
-                    "Configure a variável de ambiente TWOCAPTCHA_API_KEY"
+                    "Configure no Key Vault ou na variável de ambiente TWOCAPTCHA_API_KEY"
                 )
                 api_key = ""  # Mantém comportamento legado
 
