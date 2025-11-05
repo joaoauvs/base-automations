@@ -13,12 +13,15 @@ Este projeto fornece uma base sólida e reutilizável para desenvolvimento de au
 - **Validadores** de CPF, CNPJ, email e telefone
 - **Resolução de captchas** integrada com 2Captcha
 - **Decoradores úteis** para retry, medição de tempo e tratamento de erros
+- **Integração com Azure Key Vault** para gerenciamento seguro de credenciais
+- **Integração com Databricks** para operações de dados
 
 ## 🚀 Principais Características
 
 - ✅ **Type hints completos** em todos os módulos
 - ✅ **Docstrings padronizadas** no estilo Google
 - ✅ **Tratamento robusto de exceções** sem bare excepts
+- ✅ **Azure Key Vault** para gerenciamento seguro de credenciais (com fallback para .env)
 - ✅ **Variáveis de ambiente** para credenciais sensíveis
 - ✅ **Princípios SOLID** aplicados
 - ✅ **Compatibilidade com código legado** através de classes alias
@@ -31,6 +34,9 @@ base-automations/
 ├── src/
 │   ├── modules/          # Módulos principais
 │   │   ├── web/         # Automação web (Selenium)
+│   │   │   ├── webdriver.py      # Gerenciamento de drivers
+│   │   │   └── driveroptions.py  # Configurações de drivers
+│   │   ├── base.py      # Classes base para automações
 │   │   ├── captcha.py   # Resolução de captchas
 │   │   ├── common.py    # Decoradores e utilitários comuns
 │   │   ├── convert.py   # Conversão de datas
@@ -40,10 +46,19 @@ base-automations/
 │   │   ├── log.py       # Sistema de logging
 │   │   └── validate.py  # Validadores
 │   ├── config/          # Configurações
+│   │   ├── keyvault.py  # Integração com Azure Key Vault
+│   │   └── settings.py  # Configurações gerais
 │   ├── core/            # Funcionalidades core
+│   │   └── log.py       # Sistema de logging core
 │   └── utils/           # Utilitários diversos
+│       ├── databricks.py    # Integração com Databricks
+│       ├── decorators.py    # Decoradores úteis
+│       ├── platform_utils.py # Utilitários de plataforma
+│       └── sendfail.py      # Notificações de falha
 ├── main.py              # Script principal de exemplo
+├── mainweb.py           # Exemplo de automação web
 ├── .env.example         # Exemplo de variáveis de ambiente
+├── requirements.txt     # Dependências do projeto
 ├── REFACTORING.md       # Documentação detalhada da refatoração
 └── README.md            # Este arquivo
 ```
@@ -75,27 +90,72 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-> **Nota:** Se o arquivo `requirements.txt` não existir, instale as dependências principais:
-> ```bash
-> pip install selenium undetected-chromedriver webdriver-manager
-> pip install openpyxl pandas numpy
-> pip install python-dotenv
-> pip install twocaptcha-python
-> ```
+#### Principais dependências:
+
+- **Automação Web:** selenium, undetected-chromedriver, webdriver-manager
+- **Manipulação de Dados:** pandas, openpyxl, xlsxwriter
+- **Azure:** azure-keyvault-secrets, azure-identity
+- **Databricks:** databricks-sql-connector
+- **Captcha:** 2captcha-python
+- **Configuração:** python-dotenv
+- **Logging:** loguru
+- **Desenvolvimento:** pytest, black, flake8, mypy
 
 ## ⚙️ Configuração
 
-### 1. Configure as variáveis de ambiente
+Este projeto suporta duas formas de gerenciar credenciais:
 
-Copie o arquivo de exemplo e preencha com suas credenciais:
+### Opção 1: Azure Key Vault (Recomendado para Produção) 🔐
+
+O Azure Key Vault fornece armazenamento seguro e gerenciamento centralizado de credenciais.
+
+#### 1.1. Configure o Key Vault
 
 ```bash
 cp .env.example .env
 ```
 
-### 2. Edite o arquivo `.env`
+Edite o arquivo `.env` e configure:
 
 ```env
+# Habilitar Azure Key Vault
+USE_AZURE_KEYVAULT=true
+
+# URL do seu Key Vault
+AZURE_KEYVAULT_URL=https://seu-keyvault.vault.azure.net/
+
+# Credenciais do Service Principal (se não usar Managed Identity)
+AZURE_CLIENT_ID=seu_client_id
+AZURE_TENANT_ID=seu_tenant_id
+AZURE_CLIENT_SECRET=seu_client_secret
+```
+
+#### 1.2. Configure os segredos no Key Vault
+
+Os segredos devem ter os seguintes nomes (use hyphens):
+- `EMAIL-SENDER`
+- `EMAIL-PASSWORD`
+- `EMAIL-FAILURE-RECIPIENT`
+- `EMAIL-SMTP-SERVER`
+- `TWOCAPTCHA-API-KEY`
+- `DATABRICKS-HOST`
+- `DATABRICKS-HTTP-PATH`
+- `DATABRICKS-ACCESS-TOKEN`
+
+### Opção 2: Variáveis de Ambiente (.env)
+
+Para desenvolvimento local ou quando Key Vault não está disponível:
+
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `.env`:
+
+```env
+# Desabilitar Azure Key Vault
+USE_AZURE_KEYVAULT=false
+
 # Configurações de Email
 EMAIL_SMTP_SERVER=smtp.hostinger.com
 EMAIL_SENDER=seu_email@exemplo.com
@@ -219,6 +279,76 @@ recaptcha_solution = solver.solve_recaptcha_v2(
 )
 ```
 
+## 🔐 Azure Key Vault
+
+### Uso Básico
+
+```python
+from src.config.keyvault import KeyVaultClient, get_keyvault_client
+
+# Opção 1: Usar singleton (recomendado)
+client = get_keyvault_client()
+
+# Buscar um segredo
+email_password = client.get_secret("EMAIL-PASSWORD")
+
+# Buscar múltiplos segredos
+secrets = client.get_all_secrets([
+    "EMAIL-SENDER",
+    "EMAIL-PASSWORD",
+    "TWOCAPTCHA-API-KEY"
+])
+
+# Opção 2: Criar cliente diretamente
+client = KeyVaultClient("https://seu-keyvault.vault.azure.net/")
+password = client.get_secret("EMAIL-PASSWORD")
+```
+
+### Fallback Automático
+
+O KeyVault suporta fallback automático para variáveis de ambiente:
+
+```python
+from src.config.keyvault import get_keyvault_client
+
+client = get_keyvault_client()
+
+# Tenta Key Vault primeiro, depois EMAIL_SENDER do .env
+email = client.get_secret_with_fallback("EMAIL-SENDER", "EMAIL_SENDER")
+```
+
+### Autenticação
+
+O KeyVaultClient suporta múltiplos métodos de autenticação (em ordem de prioridade):
+
+1. **Managed Identity** (recomendado para Azure VMs/Functions/App Services)
+2. **Service Principal** (via variáveis de ambiente AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_CLIENT_SECRET)
+3. **Azure CLI** (se autenticado via `az login`)
+4. **Visual Studio Code** (se autenticado)
+5. **Azure PowerShell** (se autenticado)
+
+## 📊 Integração com Databricks
+
+O projeto inclui utilitários para integração com Databricks:
+
+```python
+from src.utils.databricks import DatabricksClient
+
+# Criar cliente (usa credenciais do .env ou Key Vault)
+client = DatabricksClient(
+    host=os.getenv("DATABRICKS_HOST"),
+    http_path=os.getenv("DATABRICKS_HTTP_PATH"),
+    access_token=os.getenv("DATABRICKS_ACCESS_TOKEN")
+)
+
+# Executar query
+result = client.execute_query("SELECT * FROM my_table LIMIT 10")
+
+# Trabalhar com os resultados
+for row in result:
+    print(row)
+```
+
 ## 📚 Documentação Adicional
 
 Para informações detalhadas sobre a refatoração e melhorias aplicadas, consulte:
@@ -243,10 +373,15 @@ python main.py
 
 ## 🔐 Segurança
 
-- ✅ Credenciais armazenadas em variáveis de ambiente
+- ✅ **Azure Key Vault** para gerenciamento seguro de credenciais em produção
+- ✅ **Fallback automático** para variáveis de ambiente durante desenvolvimento
+- ✅ **Múltiplos métodos de autenticação** (Managed Identity, Service Principal, Azure CLI)
+- ✅ **Cache de segredos** para reduzir chamadas ao Key Vault
+- ✅ Credenciais armazenadas em variáveis de ambiente como fallback
 - ✅ Arquivo `.env` incluído no `.gitignore`
 - ✅ Exemplo `.env.example` fornecido sem dados sensíveis
 - ✅ Logs de API keys são mascarados
+- ✅ Suporte a diferentes ambientes (development, staging, production)
 
 ## 🤝 Contribuindo
 
@@ -279,7 +414,28 @@ Este projeto é de código aberto e está disponível sob a licença MIT.
 - Selenium WebDriver
 - Undetected ChromeDriver
 - 2Captcha
+- Microsoft Azure (Key Vault e Identity)
+- Databricks
 - Comunidade Python
+
+## 📝 Changelog
+
+### Versão 2.0.0 (Atual)
+- ✨ Adicionada integração com Azure Key Vault para gerenciamento seguro de credenciais
+- ✨ Implementado sistema de fallback automático (Key Vault → .env)
+- ✨ Adicionada integração com Databricks
+- ✨ Melhorias na estrutura de configuração com módulo `config/`
+- ✨ Adicionados utilitários de plataforma (Windows/Linux)
+- ✨ Documentação completa atualizada
+- 🔒 Segurança aprimorada com suporte a Managed Identity
+- 📦 Dependências atualizadas no requirements.txt
+
+### Versão 1.0.0
+- 🎉 Release inicial com refatoração completa
+- ✅ Type hints e docstrings padronizadas
+- ✅ Módulos de automação web, email, captcha, validação
+- ✅ Sistema de logging robusto
+- ✅ Suporte a variáveis de ambiente
 
 ## 📞 Suporte
 
