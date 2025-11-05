@@ -13,6 +13,8 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import List, Optional
 
+from src.config.settings import get_config_value
+
 
 class EmailNotifier:
     """Notificador de emails para processos RPA.
@@ -57,11 +59,11 @@ class EmailNotifier:
         if not self.robot_name:
             raise ValueError("O nome do robô não pode ser vazio")
 
-        # Configurações do email (variáveis de ambiente ou valores padrão)
-        self._sender_email = os.getenv("EMAIL_SENDER", "")
-        self._sender_password = os.getenv("EMAIL_PASSWORD", "")
-        self._failure_recipient = os.getenv("EMAIL_FAILURE_RECIPIENT", "")
-        self.smtp_server = smtp_server or os.getenv("EMAIL_SMTP_SERVER", "smtp.hostinger.com")
+        # Configurações do email (Key Vault, variáveis de ambiente ou valores padrão)
+        self._sender_email = get_config_value("EMAIL_SENDER", "EMAIL-SENDER")
+        self._sender_password = get_config_value("EMAIL_PASSWORD", "EMAIL-PASSWORD")
+        self._failure_recipient = get_config_value("EMAIL_FAILURE_RECIPIENT", "EMAIL-FAILURE-RECIPIENT")
+        self.smtp_server = smtp_server or get_config_value("EMAIL_SMTP_SERVER", "EMAIL-SMTP-SERVER", "smtp.hostinger.com")
         self.smtp_port = smtp_port
 
         # Validação das credenciais
